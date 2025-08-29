@@ -1,69 +1,22 @@
-import os
 import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import gdown
 from surprise import SVD
-
-model_id = '1OfTG1jyiM9VCND18TxbqADuMLYVJ9lEI'
-model_path = 'model.pkl'
-
-data_id = '12NtMnhiDcjWrQkowr5TzqgAy9CUmHJDm'
-data_path = 'data.pkl'
-
-model_perfomance_id = '1724JwhcHPOioJzNwxXFM03xYfz_NHp8_'
-model_perfomance_path = 'comparison_df_set_1.csv'
 
 # Function to download and load the model 
 @st.cache_resource
 def load_model():
-    # Check if the model file already exists
-    if os.path.exists(model_path):
-        st.write("Model already exists. Skipping download.")
-        
-        model = joblib.load(model_path)
-
-        return model
-
-    # If not, download the model
-    url = f"https://drive.google.com/uc?id={model_id}"
-    st.write("Downloading model from Google Drive...")
-    gdown.download(url, model_path, quiet=False)
-    st.write("Model downloaded!")
-
-    model = joblib.load(model_path)
+    model = joblib.load('model/model.pkl')
     
     return model
 
 # Function to download and load the datasets
 def load_data():
-    # Load Events Dataset
-    # Check if the model file already exists
-    if os.path.exists(data_path) and os.path.exists(model_perfomance_path):
-        st.write("Data (1) and Data (2) already exist. Skipping download.")
+    data = joblib.load('data/data.pkl')
+
+    df = pd.read_csv('data/comparison_df_set_1.csv')
         
-        data = joblib.load(data_path)
-        df = pd.read_csv(model_perfomance_path)
-        df.drop(columns=['Unnamed: 0'], inplace=True)
-        
-        return df, data
-
-    # If not, download the model
-    url = f"https://drive.google.com/uc?id={data_id}"
-    st.write("Downloading model from Google Drive...")
-    gdown.download(url, data_path, quiet=False)
-    st.write("Data (1) downloaded!")
-
-    url = f"https://drive.google.com/uc?id={model_perfomance_id}"
-    st.write("Downloading model from Google Drive...")
-    gdown.download(url, model_perfomance_path, quiet=False)
-    st.write("Data (1) downloaded!")
-
-    data = joblib.load(data_path)
-    df = pd.read_csv(model_perfomance_path)
-    df.drop(columns=['Unnamed: 0'], inplace=True)
-    
     return df, data
  
 def get_recommendations(visitor_id, data, model, top_n=10):
