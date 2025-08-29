@@ -30,20 +30,20 @@ def load_model():
 def load_data():
     # Load Events Dataset
     url = f"https://drive.google.com/uc?id={data_id}"
-    st.write("Downloading data(1) from Google Drive...")
+    st.write("Downloading Data (1) from Google Drive...")
     gdown.download(url, data_path, quiet=False)
-    st.write("dara(1) downloaded!")
+    st.write("Data (1) downloaded!")
     
     with open(data_path, "rb") as f:
         data = joblib.load(f)
     
     # Load Model Performance Dataset
     url = f"https://drive.google.com/uc?id={model_perfomance_id}"
-    st.write("Downloading data (2) from Google Drive...")
+    st.write("Downloading Data (2) from Google Drive...")
     gdown.download(url, model_perfomance_path, quiet=False)
-    st.write("Data downloaded!")
+    st.write("Data (2) downloaded!")
     
-    df = pd.read_csv(data_path)
+    df = pd.read_csv(model_perfomance_path)
 
     return df, data
 
