@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -17,36 +18,54 @@ model_perfomance_path = 'comparison_df_set_1.csv'
 # Function to download and load the model 
 @st.cache_resource
 def load_model():
+    # Check if the model file already exists
+    if os.path.exists(model_path):
+        st.write("Model already exists. Skipping download.")
+        
+        model = joblib.load(model_path)
+
+        return model
+
+    # If not, download the model
     url = f"https://drive.google.com/uc?id={model_id}"
     st.write("Downloading model from Google Drive...")
     gdown.download(url, model_path, quiet=False)
     st.write("Model downloaded!")
+
+    model = joblib.load(model_path)
     
-    with open(model_path, "rb") as f:
-        model = joblib.load(f)
     return model
 
 # Function to download and load the datasets
 def load_data():
     # Load Events Dataset
+    # Check if the model file already exists
+    if os.path.exists(data_path) and os.path.exists(model_perfomance_path):
+        st.write("Data (1) and Data (2) already exist. Skipping download.")
+        
+        data = joblib.load(data_path)
+        df = pd.read_csv(model_perfomance_path)
+        df.drop(columns=['Unnamed: 0'], inplace=True)
+        
+        return df, data
+
+    # If not, download the model
     url = f"https://drive.google.com/uc?id={data_id}"
-    st.write("Downloading Data (1) from Google Drive...")
+    st.write("Downloading model from Google Drive...")
     gdown.download(url, data_path, quiet=False)
     st.write("Data (1) downloaded!")
-    
-    with open(data_path, "rb") as f:
-        data = joblib.load(f)
-    
-    # Load Model Performance Dataset
+
     url = f"https://drive.google.com/uc?id={model_perfomance_id}"
-    st.write("Downloading Data (2) from Google Drive...")
+    st.write("Downloading model from Google Drive...")
     gdown.download(url, model_perfomance_path, quiet=False)
-    st.write("Data (2) downloaded!")
-    
+    st.write("Data (1) downloaded!")
+
+    data = joblib.load(data_path)
     df = pd.read_csv(model_perfomance_path)
-
+    df.drop(columns=['Unnamed: 0'], inplace=True)
+    
     return df, data
-
+ 
 def get_recommendations(visitor_id, data, model, top_n=10):
     # Get a list of all unique items
     all_items = data['itemid'].unique()
@@ -77,25 +96,29 @@ def get_recommendations(visitor_id, data, model, top_n=10):
 # --- Streamlit App ---
 st.title("🎬 Movie Recommender System")
 
-model = load_model()
+try:
+    model = load_model()
 
-df, data = load_data()
+    df, data = load_data()
 
-visitor_list = data[:20]['itemid'].tolist()
-suggested_number_of_recommendations = np.arange(10)[1:]
+    visitor_list = data[:20]['itemid'].tolist()
+    suggested_number_of_recommendations = np.arange(10)[1:]
 
-st.dataframe(df)
+    st.dataframe(df)
 
-selected_visitor = st.selectbox("Choose a User:", visitor_list)
-number_of_recommendations = st.selectbox("How many Recommendations?", suggested_number_of_recommendations)
+    selected_visitor = st.selectbox("Choose a User:", visitor_list)
+    number_of_recommendations = st.selectbox("How many Recommendations?", suggested_number_of_recommendations)
 
-if st.button("Get Recommendations"):
-    with st.spinner("Generating recommendations..."):
-        recommendations = get_recommendations(selected_visitor, data, model, number_of_recommendations)
+    if st.button("Get Recommendations"):
+        with st.spinner("Generating recommendations..."):
+            recommendations = get_recommendations(selected_visitor, data, model, number_of_recommendations)
 
-        st.subheader("Recommended Movies:")
-        ##for _, row in recommendations.iterrows():
-        for item_id, predicted_rating in top_n_recommendations:
-            st.write(f"**{item_id}**")
-            st.text(f"Predicted Rating: {predicted_rating}")
-            st.markdown("---")
+            st.subheader("Recommended Movies:")
+            ##for _, row in recommendations.iterrows():
+            for item_id, predicted_rating in recommendations:
+                st.write(f"**{item_id}**")
+                st.text(f"Predicted Rating: {predicted_rating}")
+                st.markdown("---")
+except Exception as e:
+    st.error(f"Error loading model or  {e}")
+    st.write("Make sure all files (model, data(1), data(2)) are in the correct directory.")
