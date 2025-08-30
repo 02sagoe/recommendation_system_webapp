@@ -1,0 +1,102 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movie Recommender System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Movie Recommender System</h1>
+    </header>
+
+    <!-- Model Performance Table -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Model</th>
+            <th>RMSE</th>
+            <th>Time (seconds)</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for model in models %}
+            <tr>
+                <td>{{ loop.index0 }}</td>
+                <td>{{ model.Model }}</td>
+                <td>{{ model.RMSE }}</td>
+                <td>{{ model['Time (seconds)'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Form Inputs -->
+    <form id="recommend-form">
+      <div class="form-group">
+        <label for="user_id">Choose a User:</label>
+        <select id="user_id" name="user_id" required>
+          <option value="355908">355908</option>
+          <!-- Add more users here -->
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="n_recs">How many Recommendations?</label>
+        <select id="n_recs" name="n_recs" required>
+          <option value="2">2</option>
+          <option value="5">5</option>
+          <option value="10">10</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn">Get Recommendations</button>
+    </form>
+
+    <!-- Results Section -->
+    <div id="results" class="results-section">
+      <h2>Recommended Movies:</h2>
+      <div id="recommendations-list"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('recommend-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+
+      try {
+        const response = await fetch('/recommend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(data)
+        });
+
+        const recommendations = await response.json();
+
+        const list = document.getElementById('recommendations-list');
+        list.innerHTML = '';
+
+        recommendations.forEach(rec => {
+          const div = document.createElement('div');
+          div.className = 'movie-item';
+          div.innerHTML = `
+            <p><strong>${rec.movie_id}</strong></p>
+            <p>Predicted Rating: ${rec.predicted_rating.toFixed(10)}</p>
+          `;
+          list.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error fetching recommendations:", err);
+      }
+    });
+  </script>
+</body>
+</html>
