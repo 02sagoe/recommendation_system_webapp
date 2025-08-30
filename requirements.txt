@@ -1,6 +1,11 @@
+# Explicitly ensure pip, setuptools, wheel are available
+setuptools>=65
+wheel>=0.40
+
+# Core dependencies
+Flask==3.0.3
+numpy==1.26.4
 pandas==2.1.4
 joblib==1.3.0
 scikit-surprise==1.1.3
-Flask==3.0.3
-numpy==1.26.4
 gunicorn

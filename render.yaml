@@ -1,6 +1,11 @@
 services:
   - type: web
     name: movie-recommender
-    runtime: python3.11
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python app.py"
+    runtime: python3.11.11
+    buildCommand: |
+      python -m venv venv
+      source venv/bin/activate
+      python -m ensurepip --upgrade
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
+    startCommand: python app.py
