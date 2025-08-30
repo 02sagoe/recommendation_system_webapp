@@ -1,77 +1,35 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import joblib
-from surprise import SVD
+# app.py
+from flask import Flask, render_template, request, jsonify
 
-# Function to download and load the model 
-@st.cache_resource
-def load_model():
-    model = joblib.load('model/model.pkl')
-    
-    return model
+app = Flask(__name__)
 
-# Function to download and load the datasets
-def load_data():
-    data = joblib.load('data/data.pkl')
+# Example model performance data
+MODEL_PERFORMANCE = [
+    {"Model": "SVD++", "RMSE": 0.222, "Time (seconds)": 423.668},
+    {"Model": "SVD++ - cached ratings", "RMSE": 0.222, "Time (seconds)": 285.96},
+    {"Model": "SVD n_factors - 50", "RMSE": 0.223, "Time (seconds)": 40.725},
+    {"Model": "SVD n_factors - 100", "RMSE": 0.2252, "Time (seconds)": 55.433},
+    {"Model": "CoClustering", "RMSE": 0.264, "Time (seconds)": 163.994}
+]
 
-    df = pd.read_csv('data/comparison_df_set_1.csv')
-        
-    return df, data
- 
-def get_recommendations(visitor_id, data, model, top_n=10):
-    # Get a list of all unique items
-    all_items = data['itemid'].unique()
+def get_recommendations(user_id, n):
+    # Replace with your actual ML logic
+    recommendations = [
+        {"movie_id": 132633, "predicted_rating": 1.7518331778904646},
+        {"movie_id": 28789, "predicted_rating": 1.5829283270816574}
+    ]
+    return recommendations[:n]
 
-    # Choose a specific user to make recommendations for
-    visitor_id = visitor_id # Replace with a user ID from your dataset
+@app.route('/')
+def index():
+    return render_template('index.html', models=MODEL_PERFORMANCE)
 
-    # Get the items the user has already interacted with
-    user_interactions = data[data['visitorid'] == visitor_id]['itemid'].unique()
+@app.route('/recommend', methods=['POST'])
+def recommend():
+    user_id = request.form.get('user_id')
+    n = int(request.form.get('n_recs'))
+    recs = get_recommendations(user_id, n)
+    return jsonify(recs)
 
-    # Get the items the user has not interacted with
-    items_to_predict = [item for item in all_items if item not in user_interactions]
-
-    # Predict ratings for the items the user has not interacted with
-    predictions_for_user = []
-    for item_id in items_to_predict:
-        predicted_rating = model.predict(visitor_id, item_id).est
-        predictions_for_user.append((item_id, predicted_rating))
-
-    # Sort the predictions by predicted rating in descending order
-    predictions_for_user.sort(key=lambda x: x[1], reverse=True)
-
-    # Get the top N recommended items
-    top_n_recommendations = predictions_for_user[:top_n] # Recommend top n items
-
-    return top_n_recommendations
-
-# --- Streamlit App ---
-st.title("🎬 Movie Recommender System")
-
-try:
-    model = load_model()
-
-    df, data = load_data()
-
-    visitor_list = data[:20]['itemid'].tolist()
-    suggested_number_of_recommendations = np.arange(10)[1:]
-
-    st.dataframe(df)
-
-    selected_visitor = st.selectbox("Choose a User:", visitor_list)
-    number_of_recommendations = st.selectbox("How many Recommendations?", suggested_number_of_recommendations)
-
-    if st.button("Get Recommendations"):
-        with st.spinner("Generating recommendations..."):
-            recommendations = get_recommendations(selected_visitor, data, model, number_of_recommendations)
-
-            st.subheader("Recommended Movies:")
-            ##for _, row in recommendations.iterrows():
-            for item_id, predicted_rating in recommendations:
-                st.write(f"**{item_id}**")
-                st.text(f"Predicted Rating: {predicted_rating}")
-                st.markdown("---")
-except Exception as e:
-    st.error(f"Error loading model or  {e}")
-    st.write("Make sure all files (model, data(1), data(2)) are in the correct directory.")
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
