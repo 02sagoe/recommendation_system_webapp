@@ -114,3 +114,53 @@ select {
 .movie-item p {
   margin: 5px 0;
 }
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Style for the User ID input */
+input[type="text"] {
+  width: 100%; /* Full width */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  background-color: #f5f5f5;
+  box-sizing: border-box; /* Ensures padding doesn't increase width */
+}
+
+/* Make sure select has same width as input */
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  background-color: #f5f5f5;
+  box-sizing: border-box;
+}
+
+/* Button styling (optional) */
+.btn {
+  padding: 10px 20px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+}
+
+.btn:hover {
+  background-color: #e55a5a;
+}

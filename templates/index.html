@@ -10,10 +10,13 @@
 <body>
   <div class="container">
     <header>
+      <!-- Optional logo -->
+      <!-- <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo" /> -->
       <h1>Movie Recommender System</h1>
     </header>
 
     <!-- Model Performance Table -->
+    {% if models %}
     <div class="table-container">
       <table>
         <thead>
@@ -25,34 +28,41 @@
           </tr>
         </thead>
         <tbody>
-            {% for model in models %}
-            <tr>
-                <td>{{ loop.index0 }}</td>
-                <td>{{ model.Model }}</td>
-                <td>{{ model.RMSE }}</td>
-                <td>{{ model['Time (seconds)'] }}</td>
-            </tr>
-            {% endfor %}
+          {% for model in models %}
+          <tr>
+            <td>{{ loop.index0 }}</td>
+            <td>{{ model.Model }}</td>
+            <td>{{ "%.3f"|format(model.RMSE) }}</td>
+            <td>{{ "%.3f"|format(model['Time (seconds)']) }}</td>
+          </tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>
+    {% else %}
+    <p><em>Model performance data not available.</em></p>
+    {% endif %}
 
     <!-- Form Inputs -->
     <form id="recommend-form">
       <div class="form-group">
-        <label for="user_id">Choose a User:</label>
-        <select id="user_id" name="user_id" required>
-          <option value="355908">355908</option>
-          <!-- Add more users here -->
-        </select>
+        <label for="user_id">Enter User ID:</label>
+        <input type="text" id="user_id" name="user_id" placeholder="e.g., 355908" required />
       </div>
 
       <div class="form-group">
         <label for="n_recs">How many Recommendations?</label>
         <select id="n_recs" name="n_recs" required>
           <option value="2">2</option>
-          <option value="5">5</option>
-          <option value="10">10</option>
+          <option value="3">5</option>
+          <option value="4">10</option>
+          <option value="5">15</option>
+          <option value="6">20</option>
+          <option value="7">2</option>
+          <option value="8">5</option>
+          <option value="9">10</option>
+          <option value="10">15</option>
+          <option value="15">20</option>
         </select>
       </div>
 
@@ -72,29 +82,37 @@
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData);
 
+      const list = document.getElementById('recommendations-list');
+      list.innerHTML = '<p>Fetching recommendations...</p>';
+
       try {
         const response = await fetch('/recommend', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams(data)
         });
 
-        const recommendations = await response.json();
+        const result = await response.json();
 
-        const list = document.getElementById('recommendations-list');
-        list.innerHTML = '';
-
-        recommendations.forEach(rec => {
-          const div = document.createElement('div');
-          div.className = 'movie-item';
-          div.innerHTML = `
-            <p><strong>${rec.movie_id}</strong></p>
-            <p>Predicted Rating: ${rec.predicted_rating.toFixed(10)}</p>
-          `;
-          list.appendChild(div);
-        });
+        if (response.ok) {
+          list.innerHTML = '';
+          if (result.length === 0) {
+            list.innerHTML = '<p>No recommendations available for this user.</p>';
+          } else {
+            result.forEach(rec => {
+              const div = document.createElement('div');
+              div.className = 'movie-item';
+              div.innerHTML = `
+                <p><strong>${rec.movie_id}</strong></p>
+                <p>Predicted Rating: ${rec.predicted_rating.toFixed(4)}</p>
+              `;
+              list.appendChild(div);
+            });
+          }
+        } else {
+          list.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+        }
       } catch (err) {
-        console.error("Error fetching recommendations:", err);
+        list.innerHTML = `<p style="color: red;">Network error: ${err.message}</p>`;
       }
     });
   </script>
