@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
-import numpy as np
 import joblib
 from surprise import SVD
 import os
@@ -90,4 +89,6 @@ def recommend():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
